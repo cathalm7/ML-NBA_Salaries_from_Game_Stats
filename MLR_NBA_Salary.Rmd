@@ -1,0 +1,100 @@
+---
+title: "Project For Applied linear regression"
+author: "Maxime Cathala"
+date: "11/4/2022"
+output: pdf_document
+---
+
+# Loading Data
+```{r}
+library("faraway")
+path <- "/Users/Maxime/Desktop/NBA_Salaries/2017-18_NBA_salary.csv"
+full_df <- read.csv(path, header=TRUE, stringsAsFactors=FALSE)
+nba <- subset(full_df, select = c(Salary,MP,TS.,X3PAr,FTr,TRB.,AST.,STL.,
+                                     BLK.,TOV.,USG.))
+nba <- na.omit(nba)
+head(nba)
+```
+
+## Full Model Ana
+### Create Full Model (No modif, All predictors vs Salary)
+```{r}
+full <- lm(Salary ~ .,data = nba)
+```
+
+### Model Assumptions:
+
+|   Residuals vs Fitted:
+|       Quite a random scatter.
+|          If not looking where no points are below
+
+
+```{r}
+plot(full, which = 1)
+```
+
+|   Normality:
+|     Pb with the higher quantiles
+|         Points should follow the line (Normal distribution)
+```{r}
+plot(full, which = 2)
+```
+
+
+## Variable selection (AIC-Methods on Full Model)
+
+```{r}
+full_AIC <- step(full, direction = "backward",k = 2)
+```
+### Fit Reduced model with selected predictors in AIC
+```{r}
+reduced <- lm(Salary ~ AST. + USG. + TRB. + MP, data = nba)
+summary(reduced)
+vif(reduced)
+```
+
+### Is reduced model better or same then full?
+The hypotheses for the F-test performed in the anova are: 
+
+|  H0: The additional terms in the full model are 0. 
+|  HA: At least one of the additional terms is non 0.
+|       Yes: p val = 0.9577
+```{r}
+anova(reduced, full)
+```
+
+# Exploring other methods Full with sqrt(response)
+## Remove outliers (Salary over 25millions)
+```{r}
+nba2 <- nba[nba$Salary <= 25000000,]
+full2 <- lm((Salary) ~ .,data = nba2)
+full2_AIC <- step(full2, direction = "backward",k = 2)
+reduced2 <- lm(Salary ~ USG. +  TRB. + MP,data = nba2)
+anova(reduced2,full2)
+```
+
+### Full with sqrt(response)
+```{r}
+full3 <- lm(sqrt(Salary) ~ .,data = nba)
+full3_AIC <- step(full3, direction = "backward",k = 2)
+reduced3 <- lm(sqrt(Salary) ~ AST. + USG. + TRB. + MP,data = nba)
+summary(reduced3)
+```
+
+
+# Reduced models from both methods
+```{r}
+summary(reduced3)
+summary(reduced2)
+```
+
+### Is reduced model better or same then full?
+The hypotheses for the F-test performed in the anova are: 
+
+|  H0: The additional terms in the full model are 0. 
+|  HA: At least one of the additional terms is non 0.
+|       Yes: p val = 0.9788
+```{r}
+anova(reduced3,full3)
+```
+
